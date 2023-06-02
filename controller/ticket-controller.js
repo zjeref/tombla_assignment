@@ -5,7 +5,7 @@ exports.createTicket = asyncHandler(async (req, res) => {
     const number = req.query.number || 1;
 
     let ticketArray = [];
-    for(let i = 0; i < number; i++) {
+    for (let i = 0; i < number; i++) {
         const prevSet = await Ticket.find()
             .sort({ _id: -1 })
             .limit(5)
@@ -16,14 +16,43 @@ exports.createTicket = asyncHandler(async (req, res) => {
             set: ticketSet
         })
         await newTicket.save();
-        ticketArray[i]=ticketSet;
+        ticketArray[i] = ticketSet;
     }
     res.status(200).json(ticketArray)
 })
 
 
 exports.fetchTicket = asyncHandler(async (req, res) => {
-    
+    const currentPage = req.query.currentPage || 1; //current page number .. default is 1
+    const pageSize = req.query.pageSize || 10; // page size .. default is 10
+
+    const totalTicketCount = await Ticket.countDocuments();
+    const totalPageCount = Math.ceil(totalTicketCount / pageSize);
+
+    const nextPageAvailable = currentPage < totalPageCount
+
+    let allTicket;
+    if(nextPageAvailable) {
+        allTicket = await Ticket.find()
+            .skip((currentPage - 1) * pageSize)
+            .limit(10)
+            .exec()
+    } else {
+        allTicket = await Ticket.find()
+        .skip((totalPageCount - 1) * pageSize)
+        .limit(10)
+        .exec()
+    }
+
+    res.status(200).json({
+        allTicket,
+        currentPage,
+        pageSize,
+        totalPageCount,
+        totalTicketCount,
+        nextPageAvailable
+    })
+
 })
 
 
@@ -85,7 +114,7 @@ const generateTicket = async (prevSet) => {
                     let num;
                     do {
                         num = generateRandomNumber(10 * column);
-                    } while (usedNumber.has(num) || num===0)
+                    } while (usedNumber.has(num) || num === 0)
                     number = num;
                     currentRow[column] = number;
                     usedNumber.add(number)
