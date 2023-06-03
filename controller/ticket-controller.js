@@ -19,7 +19,7 @@ exports.createTicket = asyncHandler(async (req, res) => {
             set: ticketSet
         })
         await newTicket.save();
-        ticketArray[i] = ticketSet;
+        ticketArray[i] = newTicket;
     }
     res.status(200).json(ticketArray)
 })

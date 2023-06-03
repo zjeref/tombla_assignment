@@ -2,7 +2,7 @@ const {validationResult, query} = require('express-validator')
 
 exports.validateCreateTicket = async (req, res) => {
     await Promise.all([
-        query('number').isInt().withMessage("number must be an Integer").run(req)
+        query('number').optional().isInt().withMessage("number must be an Integer").run(req)
     ])
 
     const errors = validationResult(req);
@@ -14,8 +14,8 @@ exports.validateCreateTicket = async (req, res) => {
 
 exports.validateFetchTicket = async (req, res) => {
     await Promise.all([
-        query('currentPage').isInt().withMessage("currentPage must be an Integer").run(req),
-        query('PageSize').isInt().withMessage("PageSize must be an Integer").run(req),
+        query('currentPage').optional().isInt().withMessage("currentPage must be an Integer").run(req),
+        query('pageSize').optional().isInt().withMessage("PageSize must be an Integer").run(req),
     ])
 
     
