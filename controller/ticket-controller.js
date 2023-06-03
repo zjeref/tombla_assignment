@@ -1,7 +1,10 @@
 const asyncHandler = require('express-async-handler');
 const Ticket = require('../model/ticket')
+const { validateCreateTicket, validateFetchTicket } = require('../validations/ticket-validation')
 
 exports.createTicket = asyncHandler(async (req, res) => {
+    await validateCreateTicket(req, res)
+
     const number = req.query.number || 1;
 
     let ticketArray = [];
@@ -23,6 +26,8 @@ exports.createTicket = asyncHandler(async (req, res) => {
 
 
 exports.fetchTicket = asyncHandler(async (req, res) => {
+    await validateFetchTicket(req, res);
+
     const currentPage = req.query.currentPage || 1; //current page number .. default is 1
     const pageSize = req.query.pageSize || 10; // page size .. default is 10
 
@@ -32,16 +37,16 @@ exports.fetchTicket = asyncHandler(async (req, res) => {
     const nextPageAvailable = currentPage < totalPageCount
 
     let allTicket;
-    if(nextPageAvailable) {
+    if (nextPageAvailable) {
         allTicket = await Ticket.find()
             .skip((currentPage - 1) * pageSize)
             .limit(10)
             .exec()
     } else {
         allTicket = await Ticket.find()
-        .skip((totalPageCount - 1) * pageSize)
-        .limit(10)
-        .exec()
+            .skip((totalPageCount - 1) * pageSize)
+            .limit(10)
+            .exec()
     }
 
     res.status(200).json({
@@ -65,7 +70,7 @@ exports.fetchTicket = asyncHandler(async (req, res) => {
 
 
 
-
+//Functions
 
 const generateTicket = async (prevSet) => {
     let usedNumber = new Set();// for checking used number in pervious ticket

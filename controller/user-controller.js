@@ -1,15 +1,18 @@
+require("dotenv").config();
 const User = require('../model/User');
-
 const asyncHandler = require('express-async-handler');
+const {validateCreateAccount, validateVerify} = require('../validations/user-validations')
 const bcrypt = require('bcryptjs');
-const jwt = require('jwt');
+const jwt = require('jsonwebtoken');
 
 exports.createAccount = asyncHandler(async (req, res) => {
+    await validateCreateAccount(req, res);
+
     const { name, email, password } = req.body;
 
-    const existingUser = await User.findOne({email:email})
-    if(existingUser) {
-        return res.status(409).json({message:"Email Already Exist"});
+    const existingUser = await User.findOne({ email: email })
+    if (existingUser) {
+        return res.status(409).json({ message: "Email Already Exist" });
     }
     const encry_password = bcrypt.hashSync(password);
 
@@ -22,22 +25,24 @@ exports.createAccount = asyncHandler(async (req, res) => {
     res.status(200).json({
         _id: newUser._id,
         name: newUser.name,
-        email:newUser.email,
+        email: newUser.email,
         token: generateToken(newUser._id)
     });
 })
 
 
 exports.verifyAccount = asyncHandler(async (req, res) => {
-    const {email, password} = req.body;
+    await validateVerify(req, res);
 
-    const existingUser = await User.findOne({email:email})
+    const { email, password } = req.body;
 
-    if(!existingUser) {
-        return res.status(404).json({message:"Account doesn't exist"});
+    const existingUser = await User.findOne({ email: email })
+
+    if (!existingUser) {
+        return res.status(404).json({ message: "Account doesn't exist" });
     }
 
-    if(bcrypt.compare(password, existingUser.password)) {
+    if (bcrypt.compare(password, existingUser.password)) {
         res.status(200).json({
             _id: existingUser._id,
             name: existingUser.name,
@@ -45,11 +50,13 @@ exports.verifyAccount = asyncHandler(async (req, res) => {
             token: generateToken(existingUser._id)
         })
     } else {
-        res.status(401).json({message:"Invalid password"});
+        res.status(401).json({ message: "Invalid password" });
     }
 })
 
 
-const generateToken= (id) => {
-    return jwt.sign({id}, process.env.JWT_SECRET_KEY)
+
+const generateToken = (id) => {
+
+    return jwt.sign({ id }, process.env.JWT_SECRET_KEY);
 }
